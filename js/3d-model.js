@@ -10,8 +10,14 @@ import {
 
 let modelObj; // setup initializes this to a p5.js 3D model
 const devices = {}; // sensor data for each device, indexed by device id
-
+let sensorData = {};
 const AXIS_LENGTH = 400;
+
+let angle = 0;
+
+let phase = "sleep";
+let colorChange = ['red','green','blue'];
+let a = 0;
 
 const settings = {
     draw_axes: false,
@@ -21,7 +27,7 @@ const settings = {
     rx: 0,
     ry: 0,
     rz: 180,
-    model_name: 'bunny',
+    model_name: 'eye',
 };
 
 // Constants for physics simulation
@@ -31,7 +37,7 @@ const ORIGIN_SPRING_K = 0.99; // strength of spring towards origin
 const VISCOSITY = 0.99;
 
 function loadModelFromSettings() {
-    let modelName = settings.model_name || 'bunny';
+    let modelName = settings.model_name || 'eye';
     if (!modelName.match(/\.(obj|stl)$/)) {
         modelName += '.obj';
     }
@@ -62,13 +68,29 @@ export function preload() {
 
 export function setup() {
     createCanvas(windowWidth, windowHeight, WEBGL);
+
+    // var canvas = document.createElement('canvas');
+    // canvas.width = window.innerWidth;
+    // canvas.height = windowHeight;
+    // document.body.appendChild(canvas);
+
+    // var gl = canvas.getContext('webgl');
+
     createButton('Calibrate').position(0, 0).mousePressed(calibrateModels);
+    imuConnection.onSensorData(({ data }) => {
+        sensorData = { ...data };
+    });
+}
+
+function generate(){
+
 }
 
 export function draw() {
+    //console.log(sensorData);
     const currentTime = +new Date();
 
-    background(200, 200, 212);
+    background(0, 0, 0);
     noStroke();
     lights();
     orbitControl();
@@ -78,6 +100,21 @@ export function draw() {
     updatePhysics(
         models.filter(({ receivedAt }) => currentTime - receivedAt < 500)
     );
+
+if(sensorData!=undefined){
+    // if(sensorData.euler!=undefined){
+    //     //console.log(sensorData.euler[0]);
+    //     if (sensorData.euler[0]<=110 && sensorData.euler[0]>=30){
+            
+    //         console.log("texting");
+    //     }else{
+    //         console.log("sleep");
+    //     }
+    //    }
+}
+    
+
+
 
     models.forEach((data) => {
         push();
@@ -100,21 +137,63 @@ export function draw() {
         // Fade the model out, if the sensor data is stale
         const age = Math.max(0, currentTime - data.receivedAt - 250);
         const alpha = Math.max(5, 255 - age / 10);
-        fill(255, 255, 255, alpha);
+
+        if(sensorData.euler!=undefined){
+            
+            //console.log(sensorData.euler[0]);
+            if (sensorData.euler[0]<=110 && sensorData.euler[0]>=30){
+                fill(255, 255, 255, alpha);
+                console.log("texting");
+                phase = "texting";
+            }else{
+                fill(255, 255, 255, alpha);
+                fill(0, 0, 0, alpha);
+                console.log("sleep");
+                phase = "sleep";
+            }
+           }
+
+        // fill(255, 255, 255, alpha);
 
         // Fully uncalibrated models are shown in red
-        if (data.calibration === 0) {
-            fill(255, 0, 0, alpha);
-        }
+        // if (data.calibration === 0) {
+        //     fill(255, 255, 255, alpha);
+        // }
 
         // Apply the GUI rotation settings
         rotateX((settings.rx * Math.PI) / 180);
         rotateY((settings.ry * Math.PI) / 180);
         rotateZ((settings.rz * Math.PI) / 180);
-
+           
         // Translate the position in model coordinates. This swings it around
         // the end of a stick.
         translate(settings.dx, settings.dy, settings.dz);
+        phone();
+        // settiings.dx=settings.dx+1;
+
+
+        // if(settings.dx!=undefined){
+        //     strokeWeight(15);
+        //     stroke("blue");
+        //     point(-10, -100,50);
+        //     stroke("red");
+        //     point(80, -80,-50);
+        //     stroke("green");
+        //     point(-50, -100,-30);
+
+        //     stroke("white")
+        //     strokeWeight(5);
+        //     beginShape();
+        //     vertex(-10, -150,50);
+        //     vertex(80, -130,-50);
+        //     vertex(-50, -150,-30);
+        //     endShape(CLOSE);
+        //     // rotateX(angle);
+        //     // rotateY(angle);
+        //     //angle=angle+0.03;
+        // }
+        // console.log(dx);
+        // console.log(dy);
 
         // Render the model
         noStroke();
@@ -122,6 +201,53 @@ export function draw() {
 
         pop();
     });
+}
+
+function phone(){
+    if(settings.dx!=undefined){
+        if(phase == "texting"){
+            a=a+1;
+            // strokeWeight(15);
+            // stroke("blue");
+            // point(-10, -100,50);
+            // stroke("red");
+            // point(80, -80,-50);
+            // stroke("green");
+            // point(-50, -100,-30);
+            
+            let numberColor = a%3;
+            stroke(colorChange[numberColor]);
+            strokeWeight(5);
+            beginShape();
+            vertex(-10, -150,50);
+            vertex(80, -130,-50);
+            vertex(-50, -150,-30);
+            endShape(CLOSE);
+            // rotateX(angle);
+            // rotateY(angle);
+            //angle=angle+0.03;
+        }else if(phase=="sleep"){
+            // strokeWeight(15);
+            // stroke("blue");
+            // point(-10, -100,50);
+            // stroke("red");
+            // point(80, -80,-50);
+            // stroke("green");
+            // point(-50, -100,-30);
+    
+            stroke("white")
+            strokeWeight(5);
+            beginShape();
+            vertex(-10, -150,50);
+            vertex(80, -130,-50);
+            vertex(-50, -150,-30);
+            endShape(CLOSE);
+            // rotateX(angle);
+            // rotateY(angle);
+            //angle=angle+0.03;
+        }
+        
+    }
 }
 
 // Set its model's calibration matrix to the inverse of the model's current orientation.

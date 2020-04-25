@@ -36,6 +36,7 @@ function setup() {
 }
 
 function draw() {
+    //console.log(sensorData);
     background('white');
     noStroke();
 
@@ -44,6 +45,16 @@ function draw() {
     const keys = Object.keys(sensorData)
         .filter((name) => !IGNORED_PROPERTIES.includes(name))
         .sort();
+    //console.log(keys);
+   if(sensorData.euler!=undefined){
+    if (sensorData.euler[0]>=-65){
+        console.log("texting");
+    }else{
+        console.log("sleep");
+    }
+   }
+    
+
     keys.forEach((key, i) => {
         let values = sensorData[key];
         if (!Array.isArray(values)) {
@@ -62,9 +73,16 @@ function draw() {
 
         subgraphX += subgraphWidth + 50;
     });
+    // if (sensorData.euler[0]>=-65){
+    //     console.log("texting");
+    // }else{
+    //     console.log("sleep");
+    // }
 }
 
 function barChart(key, values, barColor) {
+    //console.log(values);
+    //console.log(values[0]);
     const label = capitalize(key);
 
     // update the running max and min from the new values
@@ -82,6 +100,8 @@ function barChart(key, values, barColor) {
     text(label, 0, SUBGRAPH_HEIGHT + 80);
     textSize(9);
     values.forEach((v, i) => {
+        //console.log(v);
+       
         const x = i * (BAR_WIDTH + 2);
         const yMid = SUBGRAPH_HEIGHT / 2 + 25;
         const height = (v * SUBGRAPH_HEIGHT) / 2 / Math.max(-min, max);

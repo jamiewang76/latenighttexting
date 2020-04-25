@@ -41,3 +41,7 @@ body.connected #bt-connection-button {
     stroke: black;
     stroke-width: 1.5;
 }
+#word1{
+    position: relative;
+    left:200px;
+}
